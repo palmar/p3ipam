@@ -1,0 +1,12 @@
+v0.1.0
+
+Release Date: 2025-01-26
+Features:
+- Core IPAM functionality (subnets, hosts, discoveries)
+- SQLite database with automatic initialization
+- Flexible parent references (name, ID, or CIDR)
+- Smart display with subnet names
+- Comprehensive search across all objects
+- Table formatting for clean output
+- Environment variable configuration
+- List subnet functionality for drilling down into specific networks

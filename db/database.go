@@ -426,7 +426,7 @@ func (db *Database) ListHostsInSubnet(subnetRef string) ([]Host, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve subnet reference '%s': %v", subnetRef, err)
 	}
-	
+
 	// Get all hosts in this subnet
 	rows, err := db.conn.Query(`
 		SELECT id, name, address, parent_id, comment, created_at, last_seen 
@@ -438,7 +438,7 @@ func (db *Database) ListHostsInSubnet(subnetRef string) ([]Host, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var hosts []Host
 	for rows.Next() {
 		var h Host
@@ -448,7 +448,7 @@ func (db *Database) ListHostsInSubnet(subnetRef string) ([]Host, error) {
 		}
 		hosts = append(hosts, h)
 	}
-	
+
 	return hosts, nil
 }
 
@@ -459,7 +459,7 @@ func (db *Database) GetSubnetNames() (map[string]string, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	subnetNames := make(map[string]string)
 	for rows.Next() {
 		var id, name string
@@ -469,7 +469,7 @@ func (db *Database) GetSubnetNames() (map[string]string, error) {
 		}
 		subnetNames[id] = name
 	}
-	
+
 	return subnetNames, nil
 }
 
