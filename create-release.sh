@@ -30,6 +30,10 @@ mkdir -p "release-binary"
 cp "$RELEASE_DIR/p3ipam" "release-binary/"
 cp "$RELEASE_DIR/schema.sql" "release-binary/"
 
+# Remove any macOS metadata files that might have been copied
+find "release-binary" -name "._*" -delete 2>/dev/null || true
+find "release-binary" -name ".DS_Store" -delete 2>/dev/null || true
+
 # Create release archive with just the binary and essential files
 cd "release-binary"
 tar -czf "../p3ipam-$VERSION-darwin-amd64.tar.gz" .
