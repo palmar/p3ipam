@@ -49,7 +49,9 @@ See the [release README](release/README.md) for comprehensive documentation and 
 
 ## License
 
-[Add your license here]
+This project is released under the [Unlicense](LICENSE), placing it in the public domain.
+
+**Note**: This repository contains code created using generative AI.
 
 ## Contributing
 
