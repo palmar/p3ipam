@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"p3ipam/db"
+	"p3ipam/utils"
 )
 
 const (
@@ -332,21 +333,7 @@ func handleListSubnets() {
 		return
 	}
 
-	fmt.Printf("Subnets (%d total):\n\n", len(subnets))
-	for _, subnet := range subnets {
-		fmt.Printf("  %s (%s)\n", subnet.CIDR, subnet.ID)
-		if subnet.Name != "" {
-			fmt.Printf("    Name: %s\n", subnet.Name)
-		}
-		if subnet.ParentID != nil {
-			fmt.Printf("    Parent: %s\n", *subnet.ParentID)
-		}
-		if subnet.Comment != "" {
-			fmt.Printf("    Comment: %s\n", subnet.Comment)
-		}
-		fmt.Printf("    Created: %s\n", subnet.CreatedAt.Format("2006-01-02 15:04:05"))
-		fmt.Println()
-	}
+	fmt.Println(utils.FormatSubnets(subnets))
 }
 
 func handleListHosts() {
@@ -368,24 +355,7 @@ func handleListHosts() {
 		return
 	}
 
-	fmt.Printf("Hosts (%d total):\n\n", len(hosts))
-	for _, host := range hosts {
-		fmt.Printf("  %s (%s)\n", host.Address, host.ID)
-		if host.Name != "" {
-			fmt.Printf("    Name: %s\n", host.Name)
-		}
-		if host.ParentID != "" {
-			fmt.Printf("    Parent: %s\n", host.ParentID)
-		}
-		if host.Comment != "" {
-			fmt.Printf("    Comment: %s\n", host.Comment)
-		}
-		fmt.Printf("    Created: %s\n", host.CreatedAt.Format("2006-01-02 15:04:05"))
-		if host.LastSeen != nil {
-			fmt.Printf("    Last Seen: %s\n", host.LastSeen.Format("2006-01-02 15:04:05"))
-		}
-		fmt.Println()
-	}
+	fmt.Println(utils.FormatHosts(hosts))
 }
 
 func handleListDiscoveries() {
@@ -407,15 +377,7 @@ func handleListDiscoveries() {
 		return
 	}
 
-	fmt.Printf("Discoveries (%d total):\n\n", len(discoveries))
-	for _, discovery := range discoveries {
-		fmt.Printf("  %s (%s)\n", discovery.Address, discovery.ID)
-		fmt.Printf("    Status: %s\n", discovery.Status)
-		fmt.Printf("    Subnet: %s\n", discovery.SubnetID)
-		fmt.Printf("    Discovered: %s\n", discovery.DiscoveredAt.Format("2006-01-02 15:04:05"))
-		fmt.Printf("    Last Seen: %s\n", discovery.LastSeen.Format("2006-01-02 15:04:05"))
-		fmt.Println()
-	}
+	fmt.Println(utils.FormatDiscoveries(discoveries))
 }
 
 func handleDelete(args []string) {
