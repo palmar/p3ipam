@@ -53,7 +53,7 @@ This project is released under the [Unlicense](LICENSE), placing it in the publi
 
 ## Contributing
 
-[Add contribution guidelines here]
+This is Unlicenced... I'm not your mom.
 
 ## AI Disclosure
 
