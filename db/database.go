@@ -419,6 +419,60 @@ func (db *Database) ListDiscoveries() ([]Discovery, error) {
 	return discoveries, nil
 }
 
+// ListHostsInSubnet lists all hosts within a specific subnet
+func (db *Database) ListHostsInSubnet(subnetRef string) ([]Host, error) {
+	// Resolve the subnet reference to get the actual subnet ID
+	subnetID, err := db.ResolveParentReference(subnetRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve subnet reference '%s': %v", subnetRef, err)
+	}
+	
+	// Get all hosts in this subnet
+	rows, err := db.conn.Query(`
+		SELECT id, name, address, parent_id, comment, created_at, last_seen 
+		FROM hosts 
+		WHERE parent_id = ?
+		ORDER BY address, name
+	`, subnetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var hosts []Host
+	for rows.Next() {
+		var h Host
+		err := rows.Scan(&h.ID, &h.Name, &h.Address, &h.ParentID, &h.Comment, &h.CreatedAt, &h.LastSeen)
+		if err != nil {
+			return nil, err
+		}
+		hosts = append(hosts, h)
+	}
+	
+	return hosts, nil
+}
+
+// GetSubnetNames returns a map of subnet ID to name for display purposes
+func (db *Database) GetSubnetNames() (map[string]string, error) {
+	rows, err := db.conn.Query("SELECT id, name FROM subnets")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	subnetNames := make(map[string]string)
+	for rows.Next() {
+		var id, name string
+		err := rows.Scan(&id, &name)
+		if err != nil {
+			return nil, err
+		}
+		subnetNames[id] = name
+	}
+	
+	return subnetNames, nil
+}
+
 // Initialize random seed for ID generation
 func init() {
 	rand.Seed(time.Now().UnixNano())

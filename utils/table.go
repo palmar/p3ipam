@@ -132,10 +132,15 @@ func FormatSubnets(subnets []db.Subnet) string {
 }
 
 // FormatHosts formats host data into a table
-func FormatHosts(hosts []db.Host) string {
+func FormatHosts(hosts []db.Host, subnetNames map[string]string) string {
 	table := NewTable("ID", "Address", "Name", "Parent", "Comment", "Created", "Last Seen")
 	
 	for _, host := range hosts {
+		parent := host.ParentID
+		if name, exists := subnetNames[host.ParentID]; exists && name != "" {
+			parent = name
+		}
+		
 		lastSeen := ""
 		if host.LastSeen != nil {
 			lastSeen = host.LastSeen.Format("2006-01-02 15:04")
@@ -145,7 +150,7 @@ func FormatHosts(hosts []db.Host) string {
 			host.ID,
 			host.Address,
 			host.Name,
-			host.ParentID,
+			parent,
 			host.Comment,
 			host.CreatedAt.Format("2006-01-02 15:04"),
 			lastSeen,
@@ -156,14 +161,19 @@ func FormatHosts(hosts []db.Host) string {
 }
 
 // FormatDiscoveries formats discovery data into a table
-func FormatDiscoveries(discoveries []db.Discovery) string {
+func FormatDiscoveries(discoveries []db.Discovery, subnetNames map[string]string) string {
 	table := NewTable("ID", "Address", "Subnet", "Status", "Discovered", "Last Seen")
 	
 	for _, discovery := range discoveries {
+		subnet := discovery.SubnetID
+		if name, exists := subnetNames[discovery.SubnetID]; exists && name != "" {
+			subnet = name
+		}
+		
 		table.AddRow(
 			discovery.ID,
 			discovery.Address,
-			discovery.SubnetID,
+			subnet,
 			discovery.Status,
 			discovery.DiscoveredAt.Format("2006-01-02 15:04"),
 			discovery.LastSeen.Format("2006-01-02 15:04"),

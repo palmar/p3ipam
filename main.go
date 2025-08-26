@@ -81,6 +81,7 @@ func showHelp() {
 	fmt.Println("  p3ipam add host --parent 192.168.1.0/24 --address 192.168.1.2 --name server")
 	fmt.Println("  p3ipam list subnets")
 	fmt.Println("  p3ipam list hosts")
+	fmt.Println("  p3ipam list subnet home-network")
 	fmt.Println("  p3ipam search 192.168.1")
 	fmt.Println("  p3ipam ping subnet home-network")
 }
@@ -295,7 +296,7 @@ func handleAddHost(args []string) {
 func handleList(args []string) {
 	if len(args) < 1 {
 		fmt.Println("Error: Object type required")
-		fmt.Println("Usage: p3ipam list <object>")
+		fmt.Println("Usage: p3ipam list <object> [subnet-reference]")
 		os.Exit(1)
 	}
 
@@ -307,9 +308,16 @@ func handleList(args []string) {
 		handleListHosts()
 	case "discoveries":
 		handleListDiscoveries()
+	case "subnet":
+		if len(args) < 2 {
+			fmt.Println("Error: Subnet reference required")
+			fmt.Println("Usage: p3ipam list subnet <subnet-name|id|cidr>")
+			os.Exit(1)
+		}
+		handleListSubnet(args[1])
 	default:
 		fmt.Printf("Unknown object type: %s\n", objectType)
-		fmt.Println("Supported types: subnets, hosts, discoveries")
+		fmt.Println("Supported types: subnets, hosts, discoveries, subnet")
 		os.Exit(1)
 	}
 }
@@ -355,7 +363,14 @@ func handleListHosts() {
 		return
 	}
 
-	fmt.Println(utils.FormatHosts(hosts))
+	// Get subnet names for display
+	subnetNames, err := database.GetSubnetNames()
+	if err != nil {
+		fmt.Printf("Warning: Could not get subnet names: %v\n", err)
+		subnetNames = make(map[string]string)
+	}
+
+	fmt.Println(utils.FormatHosts(hosts, subnetNames))
 }
 
 func handleListDiscoveries() {
@@ -377,7 +392,80 @@ func handleListDiscoveries() {
 		return
 	}
 
-	fmt.Println(utils.FormatDiscoveries(discoveries))
+	// Get subnet names for display
+	subnetNames, err := database.GetSubnetNames()
+	if err != nil {
+		fmt.Printf("Warning: Could not get subnet names: %v\n", err)
+		subnetNames = make(map[string]string)
+	}
+
+	fmt.Println(utils.FormatDiscoveries(discoveries, subnetNames))
+}
+
+func handleListSubnet(subnetRef string) {
+	database, err := db.Connect(db.GetDatabasePath())
+	if err != nil {
+		fmt.Printf("Error connecting to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	// Get subnet info first
+	subnetID, err := database.ResolveParentReference(subnetRef)
+	if err != nil {
+		fmt.Printf("Error resolving subnet reference '%s': %v\n", subnetRef, err)
+		os.Exit(1)
+	}
+
+	// Get subnet details
+	subnets, err := database.ListSubnets()
+	if err != nil {
+		fmt.Printf("Error listing subnets: %v\n", err)
+		os.Exit(1)
+	}
+
+	var subnetInfo *db.Subnet
+	for _, s := range subnets {
+		if s.ID == subnetID {
+			subnetInfo = &s
+			break
+		}
+	}
+
+	if subnetInfo == nil {
+		fmt.Printf("Error: Subnet not found\n")
+		os.Exit(1)
+	}
+
+	// List hosts in this subnet
+	hosts, err := database.ListHostsInSubnet(subnetRef)
+	if err != nil {
+		fmt.Printf("Error listing hosts in subnet: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Display subnet info
+	fmt.Printf("Subnet: %s (%s)\n", subnetInfo.CIDR, subnetInfo.ID)
+	if subnetInfo.Name != "" {
+		fmt.Printf("Name: %s\n", subnetInfo.Name)
+	}
+	if subnetInfo.Comment != "" {
+		fmt.Printf("Comment: %s\n", subnetInfo.Comment)
+	}
+	fmt.Println()
+
+	// Display hosts table
+	if len(hosts) == 0 {
+		fmt.Println("No hosts found in this subnet.")
+		return
+	}
+
+	// Get subnet names for display (though we only need the current one)
+	subnetNames := make(map[string]string)
+	subnetNames[subnetID] = subnetInfo.Name
+
+	fmt.Printf("Hosts in subnet %s:\n", subnetInfo.CIDR)
+	fmt.Println(utils.FormatHosts(hosts, subnetNames))
 }
 
 func handleDelete(args []string) {
