@@ -5,6 +5,11 @@ p3ipam
 *.so
 *.dylib
 
+# Release files
+p3ipam-*.tar.gz
+p3ipam-*.tar.gz.sha256
+release/
+
 # Database files
 *.db
 *.sqlite
