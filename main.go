@@ -78,6 +78,8 @@ func showHelp() {
 	fmt.Println("  p3ipam add subnet --cidr 192.168.1.0/24 --name home-network")
 	fmt.Println("  p3ipam add host --parent home-network --address 192.168.1.1 --name router")
 	fmt.Println("  p3ipam add host --parent 192.168.1.0/24 --address 192.168.1.2 --name server")
+	fmt.Println("  p3ipam list subnets")
+	fmt.Println("  p3ipam list hosts")
 	fmt.Println("  p3ipam search 192.168.1")
 	fmt.Println("  p3ipam ping subnet home-network")
 }
@@ -312,18 +314,108 @@ func handleList(args []string) {
 }
 
 func handleListSubnets() {
-	// TODO: Implement subnet listing
-	fmt.Println("Listing subnets... (not yet implemented)")
+	database, err := db.Connect(db.GetDatabasePath())
+	if err != nil {
+		fmt.Printf("Error connecting to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	subnets, err := database.ListSubnets()
+	if err != nil {
+		fmt.Printf("Error listing subnets: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(subnets) == 0 {
+		fmt.Println("No subnets found.")
+		return
+	}
+
+	fmt.Printf("Subnets (%d total):\n\n", len(subnets))
+	for _, subnet := range subnets {
+		fmt.Printf("  %s (%s)\n", subnet.CIDR, subnet.ID)
+		if subnet.Name != "" {
+			fmt.Printf("    Name: %s\n", subnet.Name)
+		}
+		if subnet.ParentID != nil {
+			fmt.Printf("    Parent: %s\n", *subnet.ParentID)
+		}
+		if subnet.Comment != "" {
+			fmt.Printf("    Comment: %s\n", subnet.Comment)
+		}
+		fmt.Printf("    Created: %s\n", subnet.CreatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Println()
+	}
 }
 
 func handleListHosts() {
-	// TODO: Implement host listing
-	fmt.Println("Listing hosts... (not yet implemented)")
+	database, err := db.Connect(db.GetDatabasePath())
+	if err != nil {
+		fmt.Printf("Error connecting to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	hosts, err := database.ListHosts()
+	if err != nil {
+		fmt.Printf("Error listing hosts: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(hosts) == 0 {
+		fmt.Println("No hosts found.")
+		return
+	}
+
+	fmt.Printf("Hosts (%d total):\n\n", len(hosts))
+	for _, host := range hosts {
+		fmt.Printf("  %s (%s)\n", host.Address, host.ID)
+		if host.Name != "" {
+			fmt.Printf("    Name: %s\n", host.Name)
+		}
+		if host.ParentID != "" {
+			fmt.Printf("    Parent: %s\n", host.ParentID)
+		}
+		if host.Comment != "" {
+			fmt.Printf("    Comment: %s\n", host.Comment)
+		}
+		fmt.Printf("    Created: %s\n", host.CreatedAt.Format("2006-01-02 15:04:05"))
+		if host.LastSeen != nil {
+			fmt.Printf("    Last Seen: %s\n", host.LastSeen.Format("2006-01-02 15:04:05"))
+		}
+		fmt.Println()
+	}
 }
 
 func handleListDiscoveries() {
-	// TODO: Implement discovery listing
-	fmt.Println("Listing discoveries... (not yet implemented)")
+	database, err := db.Connect(db.GetDatabasePath())
+	if err != nil {
+		fmt.Printf("Error connecting to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	discoveries, err := database.ListDiscoveries()
+	if err != nil {
+		fmt.Printf("Error listing discoveries: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(discoveries) == 0 {
+		fmt.Println("No discoveries found.")
+		return
+	}
+
+	fmt.Printf("Discoveries (%d total):\n\n", len(discoveries))
+	for _, discovery := range discoveries {
+		fmt.Printf("  %s (%s)\n", discovery.Address, discovery.ID)
+		fmt.Printf("    Status: %s\n", discovery.Status)
+		fmt.Printf("    Subnet: %s\n", discovery.SubnetID)
+		fmt.Printf("    Discovered: %s\n", discovery.DiscoveredAt.Format("2006-01-02 15:04:05"))
+		fmt.Printf("    Last Seen: %s\n", discovery.LastSeen.Format("2006-01-02 15:04:05"))
+		fmt.Println()
+	}
 }
 
 func handleDelete(args []string) {

@@ -344,6 +344,81 @@ func (db *Database) ResolveParentReference(reference string) (string, error) {
 	}
 }
 
+// ListSubnets returns all subnets in the database
+func (db *Database) ListSubnets() ([]Subnet, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, name, cidr, parent_id, comment, created_at 
+		FROM subnets 
+		ORDER BY cidr, name
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subnets []Subnet
+	for rows.Next() {
+		var s Subnet
+		err := rows.Scan(&s.ID, &s.Name, &s.CIDR, &s.ParentID, &s.Comment, &s.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		subnets = append(subnets, s)
+	}
+
+	return subnets, nil
+}
+
+// ListHosts returns all hosts in the database
+func (db *Database) ListHosts() ([]Host, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, name, address, parent_id, comment, created_at, last_seen 
+		FROM hosts 
+		ORDER BY address, name
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hosts []Host
+	for rows.Next() {
+		var h Host
+		err := rows.Scan(&h.ID, &h.Name, &h.Address, &h.ParentID, &h.Comment, &h.CreatedAt, &h.LastSeen)
+		if err != nil {
+			return nil, err
+		}
+		hosts = append(hosts, h)
+	}
+
+	return hosts, nil
+}
+
+// ListDiscoveries returns all discoveries in the database
+func (db *Database) ListDiscoveries() ([]Discovery, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, address, subnet_id, discovered_at, last_seen, status 
+		FROM discoveries 
+		ORDER BY address, discovered_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var discoveries []Discovery
+	for rows.Next() {
+		var d Discovery
+		err := rows.Scan(&d.ID, &d.Address, &d.SubnetID, &d.DiscoveredAt, &d.LastSeen, &d.Status)
+		if err != nil {
+			return nil, err
+		}
+		discoveries = append(discoveries, d)
+	}
+
+	return discoveries, nil
+}
+
 // Initialize random seed for ID generation
 func init() {
 	rand.Seed(time.Now().UnixNano())
